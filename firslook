@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Qazaq Quest — Слова и Грамматика</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Comic Neue', 'Poppins', system-ui, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #1a4d3e 0%, #0f2e25 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fffef7;
+            border-radius: 48px;
+            padding: 24px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+            margin-bottom: 16px;
+        }
+        .game-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fff8e7 100%);
+            border-radius: 40px;
+            padding: 24px;
+        }
+        .btn {
+            border: none;
+            background: #f4a261;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background: #2a9d8f; }
+        .btn-danger { background: #e76f51; }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #f4a261;
+            color: #f4a261;
+        }
+        .mode-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .mode-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .mode-tab.active {
+            background: #2a9d8f;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .submode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .submode-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 30px;
+            background: #e9ecef;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .submode-tab.active {
+            background: #f4a261;
+            color: white;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            padding: 12px 20px;
+            border-radius: 60px;
+            margin-bottom: 16px;
+            color: white;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+        }
+        .heart { color: #ff6b6b; font-size: 1.4rem; }
+        .energy-bar {
+            background: #e9ecef;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .energy-fill {
+            background: #f4a261;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .option-card {
+            background: #f0e6d2;
+            padding: 16px;
+            border-radius: 32px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .option-card:hover { background: #e6d5b8; transform: scale(1.02); }
+        .feedback {
+            padding: 14px;
+            border-radius: 28px;
+            margin: 16px 0;
+            font-weight: 600;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feedback.correct { background: #d1fae5; color: #065f46; border-left: 8px solid #10b981; }
+        .feedback.wrong { background: #fee2e2; color: #991b1b; border-left: 8px solid #ef4444; }
+        .level-badge {
+            background: #ffd166;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 4px;
+        }
+        .explanation-box {
+            background: #e0f2fe;
+            padding: 12px;
+            border-radius: 24px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            border-left: 6px solid #0284c7;
+        }
+        .word-card {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 40px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: 0.2s;
+        }
+        .word-card:hover { transform: scale(1.02); }
+        @keyframes fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        @media (max-width: 550px) {
+            .stats-bar { font-size: 0.8rem; }
+            .option-card { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+    // ======================== БАЗА СЛОВ (ЛЕКСИКА) ========================
+    const VOCAB = [
+        { kk: "Сәлем", ru: "Привет", type: "greeting", explanation: "«Сәлем» — неформальное приветствие друзьям." },
+        { kk: "Рахмет", ru: "Спасибо", type: "greeting", explanation: "«Рахмет» — спасибо. Важное вежливое слово." },
+        { kk: "Қош келдің", ru: "Добро пожаловать", type: "greeting", explanation: "Так говорят гостям." },
+        { kk: "Әке", ru: "Папа", type: "family", explanation: "Әке — папа. Әкем — мой папа." },
+        { kk: "Ана", ru: "Мама", type: "family", explanation: "Ана — мама. Анашым — ласково." },
+        { kk: "Аға", ru: "Старший брат", type: "family", explanation: "Аға — старший брат или уважительно к мужчине." },
+        { kk: "Іні", ru: "Младший брат", type: "family", explanation: "Іні — младший брат." },
+        { kk: "Қызыл", ru: "Красный", type: "color", explanation: "Қызыл — красный. Қызыл алма." },
+        { kk: "Көк", ru: "Синий", type: "color", explanation: "Көк — синий. Көк аспан." },
+        { kk: "Жасыл", ru: "Зеленый", type: "color", explanation: "Жасыл — зеленый. Жасыл шөп." },
+        { kk: "Сары", ru: "Желтый", type: "color", explanation: "Сары — желтый. Сары күн." },
+        { kk: "Ақ", ru: "Белый", type: "color", explanation: "Ақ — белый. Ақ қар." },
+        { kk: "Қара", ru: "Черный", type: "color", explanation: "Қара — черный. Қара түн." },
+        { kk: "Бір", ru: "Один", type: "number", explanation: "Бір — один." },
+        { kk: "Екі", ru: "Два", type: "number", explanation: "Екі — два." },
+        { kk: "Үш", ru: "Три", type: "number", explanation: "Үш — три." },
+        { kk: "Нан", ru: "Хлеб", type: "food", explanation: "Нан — хлеб. Святое в казахской культуре." },
+        { kk: "Сүт", ru: "Молоко", type: "food", explanation: "Сүт — молоко." },
+        { kk: "Мысық", ru: "Кошка", type: "animals", explanation: "Мысық — кошка." },
+        { kk: "Ит", ru: "Собака", type: "animals", explanation: "Ит — собака." },
+        { kk: "Мектеп", ru: "Школа", type: "place", explanation: "Мектеп — школа." }
+    ];
+    
+    // ======================== БАЗА ГРАММАТИКИ (ОКОНЧАНИЯ, ПАДЕЖИ, ВРЕМЕНА) ========================
+    const GRAMMAR = [
+        { text: "«Кітап» сөзіне «кім? не?» сұрағын қойсаң, қандай түрде болады?", correct: "Кітап", options: ["Кітапты", "Кітапқа", "Кітапта", "Кітаптан"], hint: "Атау септік", explanation: "Атау септікте сөз өзгермейді. Кім? Не? — Кітап." },
+        { text: "«Алманы жедім» сөзінде «-ны» қай септіктің жалғауы?", correct: "Табыс септік", options: ["Атау септік", "Табыс септік", "Барыс септік", "Шығыс септік"], hint: "-ны, -ні жалғаулары", explanation: "Табыс септік кімді? нені? сұрақтарына жауап береді." },
+        { text: "«Мектепке барамын» сөзіндегі «-ке» қай септік?", correct: "Барыс септік", options: ["Атау", "Табыс", "Барыс", "Жатыс"], hint: "қайда? қалай?", explanation: "Барыс септік қайда? қайда? сұрақтарына жауап береді." },
+        { text: "«Мен кеше кино ___» (бару). Қай сөз дұрыс?", correct: "бардым", options: ["барамын", "бардым", "барармын", "барған"], hint: "Өткен шақ", explanation: "Өткен шақта -ды, -ді, -ты, -ті жалғаулары жалғанады." },
+        { text: "«Ол ертең мектепке ___» (келу). Қай сөз дұрыс?", correct: "келеді", options: ["келді", "келеді", "келген", "келер еді"], hint: "Келер шақ", explanation: "Келер шақта -ады, -еді, -йды жалғаулары жалғанады." },
+        { text: "Сенің атың ___? (Айша)", correct: "кім", options: ["не", "кім", "қайда", "қашан"], hint: "Адамды сұраймыз", explanation: "Атын сұрағанда «кім?» сұраулығы қолданылады." },
+        { text: "Бұл ___ үй? (әке)", correct: "әкенің", options: ["әке", "әкені", "әкенің", "әкеге"], hint: "Кімнің? сұрағы", explanation: "Тәуелдік жалғау -дің, -тың, -ның." },
+        { text: "«Менің атым Айша. ___ атың кім?»", correct: "Сенің", options: ["Менің", "Сенің", "Оның", "Біздің"], hint: "Сенің", explanation: "Сенің — твоё имя." },
+        { text: "«Оқушылар кітап ___» (оқу). Қай сөз дұрыс?", correct: "оқиды", options: ["оқиды", "оқыды", "оқыған", "оқыса"], hint: "Қазіргі шақ", explanation: "Қазіргі шақта -ады, -ейді, -йды." }
+    ];
+    
+    // Объединенная база для игры (рандом из слов и грамматики)
+    function getAllQuestions() {
+        const vocabQuestions = VOCAB.map(v => ({
+            type: "vocab",
+            question: `🇰🇿 "${v.kk}" — дегеніміз не?`,
+            correct: v.ru,
+            options: (() => {
+                const wrong = VOCAB.filter(w => w.ru !== v.ru).slice(0, 3).map(w => w.ru);
+                return [v.ru, ...wrong].sort(() => Math.random() - 0.5);
+            })(),
+            explanation: v.explanation,
+            id: v.kk
+        }));
+        
+        const grammarQuestions = GRAMMAR.map(g => ({
+            type: "grammar",
+            question: g.text,
+            correct: g.correct,
+            options: g.options,
+            explanation: g.explanation,
+            id: g.text
+        }));
+        
+        return [...vocabQuestions, ...grammarQuestions];
+    }
+    
+    let cachedAllQuestions = null;
+    function getRandomQuestion() {
+        if(!cachedAllQuestions) cachedAllQuestions = getAllQuestions();
+        const randomIndex = Math.floor(Math.random() * cachedAllQuestions.length);
+        return { ...cachedAllQuestions[randomIndex] };
+    }
+    
+    // ======================== СОСТОЯНИЕ ========================
+    let game = {
+        user: null,
+        mode: "learn",           // "learn" или "game"
+        learnSubmode: "vocab",   // "vocab" или "grammar" для режима изучения
+        level: 1,
+        xp: 0,
+        maxXp: 100,
+        lives: 3,
+        crystals: 15,
+        
+        // Игровой режим
+        sessionQuestions: 0,
+        maxSessionQuestions: 5,
+        restUntil: null,
+        dailyLessons: 0,
+        maxDailyLessons: 4,
+        lastLessonDate: null,
+        
+        dailyDone: 0,
+        dailyGoal: 3,
+        streak: 0,
+        lastPlayDate: null,
+        currentTask: null,
+        feedback: { text: "", type: "", explanation: "" },
+        wrongIds: [],      // ID вопросов, где ошибались
+        
+        // Режим изучения
+        currentVocabIndex: 0,
+        currentGrammarIndex: 0,
+        knownVocabIds: [],    // выученные слова
+        knownGrammarIds: []   // выученные грамматические правила
+    };
+    
+    function saveGame() {
+        if(game.user) {
+            localStorage.setItem("qazaqQuestV5", JSON.stringify({
+                user: game.user, mode: game.mode, learnSubmode: game.learnSubmode,
+                level: game.level, xp: game.xp, maxXp: game.maxXp,
+                lives: game.lives, crystals: game.crystals,
+                sessionQuestions: game.sessionQuestions, dailyLessons: game.dailyLessons,
+                lastLessonDate: game.lastLessonDate, dailyDone: game.dailyDone,
+                streak: game.streak, lastPlayDate: game.lastPlayDate,
+                wrongIds: game.wrongIds, restUntil: game.restUntil,
+                knownVocabIds: game.knownVocabIds, knownGrammarIds: game.knownGrammarIds
+            }));
+        }
+    }
+    
+    function loadGame() {
+        const data = localStorage.getItem("qazaqQuestV5");
+        if(data) {
+            try {
+                const saved = JSON.parse(data);
+                game.user = saved.user;
+                game.mode = saved.mode || "learn";
+                game.learnSubmode = saved.learnSubmode || "vocab";
+                game.level = saved.level || 1;
+                game.xp = saved.xp || 0;
+                game.maxXp = saved.maxXp || 100;
+                game.lives = saved.lives || 3;
+                game.crystals = saved.crystals || 15;
+                game.sessionQuestions = saved.sessionQuestions || 0;
+                game.dailyLessons = saved.dailyLessons || 0;
+                game.lastLessonDate = saved.lastLessonDate;
+                game.dailyDone = saved.dailyDone || 0;
+                game.streak = saved.streak || 0;
+                game.lastPlayDate = saved.lastPlayDate;
+                game.wrongIds = saved.wrongIds || [];
+                game.restUntil = saved.restUntil || null;
+                game.knownVocabIds = saved.knownVocabIds || [];
+                game.knownGrammarIds = saved.knownGrammarIds || [];
+                
+                const today = new Date().toDateString();
+                if(game.lastLessonDate !== today) {
+                    game.dailyLessons = 0;
+                    game.sessionQuestions = 0;
+                    game.lastLessonDate = today;
+                }
+                if(game.lastPlayDate !== today) game.dailyDone = 0;
+                if(game.restUntil && Date.now() > game.restUntil) game.restUntil = null;
+                return true;
+            } catch(e) {}
+        }
+        return false;
+    }
+    
+    function celebrate() {
+        for(let i = 0; i < 40; i++) {
+            const conf = document.createElement('div');
+            conf.style.position = 'fixed';
+            conf.style.width = '8px';
+            conf.style.height = '8px';
+            conf.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+            conf.style.left = Math.random() * 100 + '%';
+            conf.style.top = '-20px';
+            conf.style.borderRadius = '50%';
+            conf.style.pointerEvents = 'none';
+            conf.style.zIndex = '1000';
+            conf.style.animation = `fall ${0.8 + Math.random() * 0.8}s linear forwards`;
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 1500);
+        }
+    }
+    
+    function addXP(amount) {
+        game.xp += amount;
+        while(game.xp >= game.maxXp) {
+            game.xp -= game.maxXp;
+            game.level++;
+            game.maxXp = Math.floor(game.maxXp * 1.2);
+            game.crystals += 5;
+        }
+        saveGame();
+    }
+    
+    function loseLife() {
+        game.lives--;
+        if(game.lives <= 0) {
+            game.lives = 3;
+            game.xp = Math.max(0, game.xp - 20);
+        }
+        saveGame();
+    }
+    
+    function completeSession() {
+        game.dailyLessons++;
+        game.lastLessonDate = new Date().toDateString();
+        game.crystals += 5;
+        game.sessionQuestions = 0;
+        game.restUntil = Date.now() + 10 * 60 * 1000;
+        game.feedback = {
+            text: `🎉 Урок завершен! +5 кристаллов. Отдых 10 минут! (${game.dailyLessons}/${game.maxDailyLessons} уроков)`,
+            type: "correct",
+            explanation: "Сделай перерыв, разомнись, выпей воды 💧"
+        };
+        saveGame();
+        renderGame();
+    }
+    
+    function checkGameRestrictions() {
+        if(game.dailyLessons >= game.maxDailyLessons) {
+            return { allowed: false, reason: "📅 Сегодня 4 урока пройдено! Отдыхай до завтра. 🌙" };
+        }
+        if(game.restUntil && Date.now() < game.restUntil) {
+            const remaining = Math.ceil((game.restUntil - Date.now()) / 1000);
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            return { allowed: false, reason: `🧘 Отдых! Через ${minutes}:${seconds.toString().padStart(2,'0')}` };
+        }
+        return { allowed: true };
+    }
+    
+    function getGameTask() {
+        if(game.wrongIds.length > 0 && Math.random() < 0.4) {
+            const all = getAllQuestions();
+            const wrongQuestion = all.find(q => q.id === game.wrongIds[0]);
+            if(wrongQuestion) return { ...wrongQuestion };
+        }
+        return getRandomQuestion();
+    }
+    
+    function checkAnswer(selected) {
+        const task = game.currentTask;
+        if(!task) return;
+        
+        if(game.mode === "game") {
+            const restriction = checkGameRestrictions();
+            if(!restriction.allowed) {
+                game.feedback = { text: restriction.reason, type: "wrong", explanation: "" };
+                renderGame();
+                return;
+            }
+        }
+        
+        const isCorrect = (selected === task.correct);
+        
+        if(isCorrect) {
+            game.wrongIds = game.wrongIds.filter(id => id !== task.id);
+            game.feedback = { text: "✅ Дұрыс! +10 XP", type: "correct", explanation: task.explanation };
+            addXP(10);
+            celebrate();
+            
+            const today = new Date().toDateString();
+            game.lastPlayDate = today;
+            game.dailyDone = (game.lastPlayDate === today) ? (game.dailyDone + 1) : 1;
+            
+            if(game.mode === "game") {
+                game.sessionQuestions++;
+                if(game.sessionQuestions >= game.maxSessionQuestions) {
+                    completeSession();
+                    renderGame();
+                    return;
+                }
+            }
+            
+            saveGame();
+            renderGame();
+            setTimeout(() => {
+                game.currentTask = getGameTask();
+                game.feedback = { text: "", type: "", explanation: "" };
+                renderGame();
+            }, 1800);
+        } else {
+            game.feedback = { text: `❌ Қате! Дұрыс: "${task.correct}".`, type: "wrong", explanation: task.explanation };
+            if(!game.wrongIds.includes(task.id)) game.wrongIds.push(task.id);
+            if(game.mode === "game") loseLife();
+            saveGame();
+            renderGame();
+            setTimeout(() => {
+                if(game.mode !== "game" || game.lives > 0) {
+                    game.feedback = { text: "", type: "", explanation: "" };
+                    renderGame();
+                }
+            }, 1800);
+        }
+    }
+    
+    // ======================== РЕЖИМ ИЗУЧЕНИЯ ========================
+    function getCurrentLearnItem() {
+        if(game.learnSubmode === "vocab") {
+            return VOCAB[game.currentVocabIndex];
+        } else {
+            return GRAMMAR[game.currentGrammarIndex];
+        }
+    }
+    
+    function getKnownCount() {
+        if(game.learnSubmode === "vocab") return game.knownVocabIds.length;
+        return game.knownGrammarIds.length;
+    }
+    
+    function getTotalCount() {
+        if(game.learnSubmode === "vocab") return VOCAB.length;
+        return GRAMMAR.length;
+    }
+    
+    function markCurrentAsKnown() {
+        const item = getCurrentLearnItem();
+        const id = game.learnSubmode === "vocab" ? item.kk : item.text;
+        const knownList = game.learnSubmode === "vocab" ? game.knownVocabIds : game.knownGrammarIds;
+        
+        if(!knownList.includes(id)) {
+            knownList.push(id);
+            game.crystals += 1;
+            game.feedback = { text: `📚 Выучено! +1 кристалл`, type: "correct", explanation: "" };
+            saveGame();
+        } else {
+            game.feedback = { text: "Ты уже знаешь это! 🎉", type: "correct", explanation: "" };
+        }
+        
+        // автоматически переключаем на следующий элемент
+        if(game.learnSubmode === "vocab") {
+            game.currentVocabIndex = (game.currentVocabIndex + 1) % VOCAB.length;
+        } else {
+            game.currentGrammarIndex = (game.currentGrammarIndex + 1) % GRAMMAR.length;
+        }
+        
+        renderStudyMode();
+        setTimeout(() => {
+            game.feedback = { text: "", type: "", explanation: "" };
+            renderStudyMode();
+        }, 1200);
+    }
+    
+    function nextLearnItem() {
+        if(game.learnSubmode === "vocab") {
+            game.currentVocabIndex = (game.currentVocabIndex + 1) % VOCAB.length;
+        } else {
+            game.currentGrammarIndex = (game.currentGrammarIndex + 1) % GRAMMAR.length;
+        }
+        renderStudyMode();
+    }
+    
+    function prevLearnItem() {
+        if(game.learnSubmode === "vocab") {
+            game.currentVocabIndex = (game.currentVocabIndex - 1 + VOCAB.length) % VOCAB.length;
+        } else {
+            game.currentGrammarIndex = (game.currentGrammarIndex - 1 + GRAMMAR.length) % GRAMMAR.length;
+        }
+        renderStudyMode();
+    }
+    
+    function flipLearnCard() {
+        const wordDiv = document.getElementById("learnFront");
+        const transDiv = document.getElementById("learnBack");
+        if(wordDiv.style.display !== "none") {
+            wordDiv.style.display = "none";
+            transDiv.style.display = "block";
+        } else {
+            wordDiv.style.display = "block";
+            transDiv.style.display = "none";
+        }
+    }
+    
+    function renderStudyMode() {
+        const item = getCurrentLearnItem();
+        const knownCount = getKnownCount();
+        const totalCount = getTotalCount();
+        const percent = Math.round(knownCount / totalCount * 100);
+        
+        let frontContent = "", backContent = "";
+        if(game.learnSubmode === "vocab") {
+            frontContent = `🇰🇿 ${item.kk}`;
+            backContent = `🇷🇺 ${item.ru}`;
+        } else {
+            frontContent = `📐 ${item.text}`;
+            backContent = `✅ ${item.correct}\n\n💡 ${item.explanation}`;
+        }
+        
+        const html = `
+            <div class="container">
+                <div class="stats-bar">
+                    <div>👤 ${game.user} | Lv.${game.level}</div>
+                    <div>💎 ${game.crystals}</div>
+                    <div>📚 ${knownCount}/${totalCount}</div>
+                </div>
+                <div class="mode-tabs">
+                    <div class="mode-tab ${game.mode === 'learn' ? 'active' : ''}" onclick="setMode('learn')">📚 ИЗУЧЕНИЕ</div>
+                    <div class="mode-tab ${game.mode === 'game' ? 'active' : ''}" onclick="setMode('game')">🎮 ИГРА</div>
+                </div>
+                <div class="submode-tabs">
+                    <div class="submode-tab ${game.learnSubmode === 'vocab' ? 'active' : ''}" onclick="setLearnSubmode('vocab')">📖 Слова</div>
+                    <div class="submode-tab ${game.learnSubmode === 'grammar' ? 'active' : ''}" onclick="setLearnSubmode('grammar')">📐 Грамматика</div>
+                </div>
+                <div class="card" style="text-align:center">
+                    <div class="word-card" id="studyCard" onclick="flipLearnCard()">
+                        <div id="learnFront" style="font-size: ${game.learnSubmode === 'vocab' ? '2.5rem' : '1.4rem'}; font-weight: bold;">${frontContent}</div>
+                        <div id="learnBack" style="font-size: 1.3rem; font-weight: bold; display: none; white-space: pre-line;">${backContent}</div>
+                        <div style="margin-top: 16px; font-size: 0.8rem; color: #888;">👆 Нажми, чтобы перевернуть</div>
+                    </div>
+                    ${game.learnSubmode === "grammar" ? `<div class="explanation-box">💡 ${item.explanation || item.hint || "Правило грамматики"}</div>` : `<div class="explanation-box">💡 ${item.explanation}</div>`}
+                    <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: center;">
+                        <button class="btn-outline btn" onclick="prevLearnItem()">◀ Назад</button>
+                        <button class="btn-primary btn" onclick="markCurrentAsKnown()">✅ Знаю!</button>
+                        <button class="btn-outline btn" onclick="nextLearnItem()">Вперед ▶</button>
+                    </div>
+                    ${game.feedback.text ? `<div class="feedback ${game.feedback.type}">${game.feedback.text}</div>` : ""}
+                    <div class="energy-bar" style="margin-top: 20px;"><div class="energy-fill" style="width: ${percent}%"></div></div>
+                    <div>Прогресс: ${percent}% (${knownCount} из ${totalCount} выучено)</div>
+                </div>
+            </div>
+        `;
+        document.getElementById("app").innerHTML = html;
+    }
+    
+    // ======================== ИГРОВОЙ РЕЖИМ ========================
+    function renderGameMode() {
+        if(!game.currentTask) game.currentTask = getGameTask();
+        const task = game.currentTask;
+        const restriction = checkGameRestrictions();
+        
+        if(!restriction.allowed && !game.feedback.text) {
+            game.feedback = { text: restriction.reason, type: "wrong", explanation: "" };
+        }
+        
+        let restTimerHtml = "";
+        if(game.restUntil && Date.now() < game.restUntil) {
+            const remaining = Math.ceil((game.restUntil - Date.now()) / 1000);
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            restTimerHtml = `<span class="level-badge" style="background:#e76f51;">⏰ ${minutes}:${seconds.toString().padStart(2,'0')}</span>`;
+        }
+        
+        let optionsHtml = "";
+        task.options.forEach(opt => {
+            optionsHtml += `<div class="option-card" onclick="answer('${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
+        });
+        
+        const xpPercent = (game.xp / game.maxXp) * 100;
+        const livesDisplay = "❤️".repeat(game.lives) + "🖤".repeat(3 - game.lives);
+        
+        const html = `
+            <div class="container">
+                <div class="stats-bar">
+                    <div>👤 ${game.user} | Lv.${game.level}</div>
+                    <div class="heart">${livesDisplay}</div>
+                    <div>💎 ${game.crystals}</div>
+                </div>
+                <div class="energy-bar"><div class="energy-fill" style="width: ${xpPercent}%"></div></div>
+                <div class="mode-tabs">
+                    <div class="mode-tab ${game.mode === 'learn' ? 'active' : ''}" onclick="setMode('learn')">📚 ИЗУЧЕНИЕ</div>
+                    <div class="mode-tab ${game.mode === 'game' ? 'active' : ''}" onclick="setMode('game')">🎮 ИГРА</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <span class="level-badge">📊 Урок: ${game.sessionQuestions}/${game.maxSessionQuestions}</span>
+                    <span class="level-badge">📅 День: ${game.dailyLessons}/${game.maxDailyLessons}</span>
+                    ${restTimerHtml}
+                    <span class="level-badge">🎲 ${task.type === 'vocab' ? 'Слова' : 'Грамматика'}</span>
+                </div>
+                <div class="card game-card">
+                    <h2 style="margin: 24px 0; text-align:center; font-size:1.6rem;">${task.question}</h2>
+                    <div class="options-grid">${optionsHtml}</div>
+                    ${game.feedback.text ? `
+                        <div class="feedback ${game.feedback.type}">
+                            ${game.feedback.text}
+                            ${game.feedback.explanation ? `<div class="explanation-box">📖 ${game.feedback.explanation}</div>` : ""}
+                        </div>
+                    ` : ""}
+                    <div class="explanation-box" style="background:#fef3c7;">
+                        🎮 ${game.maxSessionQuestions} вопросов → отдых 10 мин | ${game.maxDailyLessons} уроков в день
+                    </div>
+                    <button class="btn-outline btn" onclick="skipRestGame()" style="margin-top:12px; width:100%;">⏩ Пропустить отдых (5💎)</button>
+                </div>
+            </div>
+        `;
+        document.getElementById("app").innerHTML = html;
+    }
+    
+    window.skipRestGame = function() {
+        if(game.crystals >= 5 && game.restUntil && Date.now() < game.restUntil) {
+            game.crystals -= 5;
+            game.restUntil = null;
+            game.sessionQuestions = 0;
+            game.feedback = { text: "✨ Отдых пропущен за 5 кристаллов! ✨", type: "correct", explanation: "" };
+            saveGame();
+            renderGame();
+            setTimeout(() => {
+                game.feedback = { text: "", type: "", explanation: "" };
+                renderGame();
+            }, 1500);
+        } else if(game.crystals < 5) {
+            game.feedback = { text: "❌ Нужно 5 кристаллов!", type: "wrong", explanation: "" };
+            renderGame();
+        }
+    };
+    
+    function renderGame() {
+        if(!game.user) {
+            renderLogin();
+            return;
+        }
+        if(game.mode === "learn") {
+            renderStudyMode();
+        } else {
+            renderGameMode();
+        }
+    }
+    
+    window.setMode = function(mode) {
+        game.mode = mode;
+        game.feedback = { text: "", type: "", explanation: "" };
+        if(mode === "game" && !game.currentTask) game.currentTask = getGameTask();
+        saveGame();
+        renderGame();
+    };
+    
+    window.setLearnSubmode = function(submode) {
+        game.learnSubmode = submode;
+        game.feedback = { text: "", type: "", explanation: "" };
+        renderStudyMode();
+    };
+    
+    window.answer = function(selected) {
+        checkAnswer(selected);
+    };
+    
+    window.flipLearnCard = flipLearnCard;
+    window.nextLearnItem = nextLearnItem;
+    window.prevLearnItem = prevLearnItem;
+    window.markCurrentAsKnown = markCurrentAsKnown;
+    
+    function renderLogin() {
+        document.getElementById("app").innerHTML = `
+            <div class="container" style="margin-top: 12vh;">
+                <div class="card" style="text-align:center">
+                    <h1>🇰🇿 Qazaq Quest</h1>
+                    <p style="margin:16px;">📖 СЛОВА + 📐 ГРАММАТИКА<br>🎮 Рандомные вопросы в игре!</p>
+                    <input type="text" id="playerName" placeholder="Твое имя" style="width:80%; padding:14px; border-radius:40px; border:none; margin:12px; text-align:center;">
+                    <button class="btn btn-primary" id="startBtn">🚀 Начать</button>
+                </div>
+            </div>
+        `;
+        document.getElementById("startBtn").onclick = () => {
+            const name = document.getElementById("playerName").value.trim();
+            if(!name) return alert("Введи имя!");
+            game.user = name;
+            game.mode = "learn";
+            game.currentTask = getGameTask();
+            saveGame();
+            renderGame();
+        };
+    }
+    
+    if(loadGame() && game.user) {
+        renderGame();
+    } else {
+        renderLogin();
+    }
+</script>
+</body>
+</html>
